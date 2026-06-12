@@ -311,6 +311,7 @@ export default function VerificationPipelineScreen() {
                 </View>
                 <View style={styles.kycRow}>
                   <Landmark size={14} color={colors.muted} />
+                  {/* Cast bankAccountNumber to String defensively; backend parser auto-casts pure numeric strings to integers */}
                   <Text style={styles.kycText}>Bank: {farmerKYC.bankName} (Acct: ...{farmerKYC.bankAccountNumber ? String(farmerKYC.bankAccountNumber).slice(-4) : 'N/A'})</Text>
                 </View>
 
