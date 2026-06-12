@@ -1,0 +1,134 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  FARMER
+  ADMIN
+}
+
+enum OwnershipType {
+  OWNED
+  LEASED
+  SHARED
+}
+
+enum KYCStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LoanStatus {
+  PENDING
+  OFFERED
+  APPROVED
+  REJECTED
+  DISBURSED
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(FARMER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  farmer       Farmer?
+}
+
+model Farmer {
+  id              String            @id @default(uuid())
+  userId          String            @unique
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName        String
+  mobile          String
+  dob             DateTime
+  gender          String
+  address         String
+  village         String
+  district        String
+  state           String
+  gpsLat          Float?
+  gpsLon          Float?
+  kycIdType       String
+  kycIdNumber     String            @unique
+  kycStatus       KYCStatus         @default(PENDING)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  farmDetails     FarmDetails?
+  cropImages      CropImage[]
+  creditScores    CreditScore[]
+  loanApplications LoanApplication[]
+}
+
+model FarmDetails {
+  id             String        @id @default(uuid())
+  farmerId       String        @unique
+  farmer         Farmer        @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  sizeAcres      Float
+  ownershipType  OwnershipType
+  cropType       String
+  sowingDate     DateTime
+  harvestDate    DateTime
+  soilType       String
+  irrigationType String
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model CropImage {
+  id                      String   @id @default(uuid())
+  farmerId                String
+  farmer                  Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  imageUrl                String
+  diseaseDetected         String
+  confidenceScore         Float
+  severity                Severity
+  treatmentRecommendation String
+  createdAt               DateTime @default(now())
+}
+
+model CreditScore {
+  id                       String   @id @default(uuid())
+  farmerId                 String
+  farmer                   Farmer   @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  score                    Int      // 0 - 100
+  grade                    String   // e.g. "A+", "B"
+  riskRating               String   // "LOW", "MEDIUM", "HIGH"
+  cropHealthScore          Float    // 20% weight
+  yieldStabilityScore      Float    // 20% weight
+  climateRiskScore         Float    // 15% weight
+  farmingPracticeScore     Float    // 15% weight
+  financialCapabilityScore Float    // 20% weight
+  trustVerificationScore   Float    // 10% weight
+  createdAt                DateTime @default(now())
+}
+
+model LoanApplication {
+  id                  String     @id @default(uuid())
+  farmerId            String
+  farmer              Farmer     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  amount              Float
+  tenureMonths        Int
+  interestRate        Float
+  status              LoanStatus @default(PENDING)
+  emi                 Float
+  bankName            String
+  offeredInterestRate Float?
+  offeredTenureMonths Int?
+  adminRemarks        String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+}
